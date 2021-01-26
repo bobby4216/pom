@@ -1,18 +1,35 @@
 pipeline {
   agent { label 'slave' }
-  stages {
+  
+    tools {
+        maven 'Maven 3.3.9'
+        jdk 'jdk8'
+    }
+    stages {
     stage('Source') {
       steps {
         git 'git@github.com:bobby4216/pom.git'
       }
     }
-    stage('Compile') {
-      tools {
-        gradle 'mvn'
-      }
-      steps {
-        sh 'mvn clean package'
-      }
+
+        stage ('Initialize') {
+            steps {
+                sh '''
+                    echo "PATH = ${PATH}"
+                    echo "M2_HOME = ${M2_HOME}"
+                '''
+            }
+        }
+
+        stage ('Build') {
+            steps {
+                sh 'mvn -Dmaven.test.failure.ignore=true install' 
+            }
+            post {
+                success {
+                    junit 'target/surefire-reports/**/*.xml' 
+                }
+            }
+        }
     }
-  }
 }
